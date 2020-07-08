@@ -1,9 +1,9 @@
 CXX = g++
-
+__REL = 1
 ifeq ($(__REL), 1)
   CXXFLAGS = -O2 -g -pipe -fPIC -W -DNDEBUG -Wwrite-strings -Wpointer-arith \
              -Wreorder -Wswitch -Wsign-promo -Wredundant-decls -Wformat -Wall -Wno-unused-parameter \
-             -D_GNU_SOURCE -D__STDC_FORMAT_MACROS -std=c++11 -gdwarf-2 -Wno-redundant-decls
+             -D_GNU_SOURCE -D__STDC_FORMAT_MACROS -std=c++11 -gdwarf-2 -Wno-redundant-decls -fpermissive
 else
   CXXFLAGS = -O0 -g -pg -pipe -fPIC -W -DDEBUG -Wwrite-strings -Wpointer-arith -Wreorder -Wswitch \
              -Wsign-promo -Wredundant-decls -Wformat -Wall -Wno-unused-parameter -D_GNU_SOURCE \
@@ -15,10 +15,13 @@ SRC_DIR = .
 THIRD_PATH = ../../third
 
 # ROCKSDB_LDFLAGS= -lsnappy -lz -lbz2 -llz4 -lzstd
-ROCKSDB_LDFLAGS= -lsnappy  -lgflags -lz -lbz2
+ROCKSDB_LDFLAGS= -lsnappy  -lgflags -lz -lbz2 -llz4
 TCMALLOC_EXTENSION_FLAGS=
 TCMALLOC_LDFLAGS=
 PROCESSOR_NUMS=2
+
+SLASH_PATH=$(THIRD_PATH)/slash
+PINK_PATH=$(THIRD_PATH)/pink
 
 NEMO_PATH=$(THIRD_PATH)/nemo
 NEMO=$(NEMO_PATH)/lib/libnemo.a
@@ -27,7 +30,7 @@ NEMO_ROCKSDB_PATH=$(THIRD_PATH)/nemo-rocksdb
 NEMO_ROCKSDB=$(NEMO_ROCKSDB_PATH)/lib/libnemodb.a
 
 UNWIND_PATH=../deps/libunwind
-GFLAGS_PATH=../deps/gflags
+GFLAGS_PATH=../deps/gflags-2.2.1
 NEMO=$(NEMO_PATH)/lib/libnemo.a
 PIKA_PATH=./pika2.3.6
 
@@ -37,7 +40,8 @@ INCLUDE_PATH = -I$(PIKA_PATH)/ \
 	   -I$(THIRD_PATH)/pink \
 	   -I$(THIRD_PATH)/nemo/include/ \
 	   -I$(THIRD_PATH)/nemo-rocksdb/include/ \
-	   -I$(THIRD_PATH)/rocksdb/include/
+	   -I$(THIRD_PATH)/rocksdb/include/ \
+           -I$(GFLAGS_PATH)/build/include/
 
 LIB_PATH = -L./ \
 	   -L$(GFLAGS_PATH)/lib/ \

@@ -3,6 +3,8 @@ tags
 
 #Compiled Object files
 *.o
+*.rdb
+*.out
 
 #Pika to Txt Binary file
 pika_to_txt/pika_to_txt
@@ -35,3 +37,7 @@ aof_to_pika/output/bin/aof_to_pika
 
 ## txt to pika Binary file
 txt_to_pika/txt_to_pika
+
+##libs
+pika-port/deps/
+third/

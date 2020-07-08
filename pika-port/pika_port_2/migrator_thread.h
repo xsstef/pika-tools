@@ -16,13 +16,15 @@ class MigratorThread : public pink::Thread {
       thread_index_(0),
       num_(0)
       {
+        set_thread_name("migrator");
       }
+
 
   int64_t num() {
     slash::MutexLock l(&num_mutex_);
     return num_;
   }
-  
+
   virtual ~ MigratorThread();
   bool should_exit_;
  private:

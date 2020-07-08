@@ -251,6 +251,7 @@ int TrysyncThread::Retransmit() {
   migrators.emplace_back(new MigratorThread(db.get(), &senders, nemo::DataType::kZSize, thread_num));
 
   // start threads
+  LOG(INFO) << "Sart to migrate data...";
   for (size_t i = 0; i < kDataSetNum; i++) {
     migrators[i]->StartThread();
   }
@@ -322,7 +323,7 @@ void* TrysyncThread::ThreadMain() {
                     g_port_conf.local_ip, g_port_conf.local_port + 3000);
     if (0 != ret) {
       LOG(WARNING) << "Failed to start rsync, path:" << dbsync_path << " error : " << ret;
-      return false;
+      return NULL;
     }
     LOG(INFO) << "Finish to start rsync, path:" << dbsync_path;
 

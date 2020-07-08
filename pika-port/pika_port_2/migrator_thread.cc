@@ -24,7 +24,7 @@ void MigratorThread::MigrateDB(const char type) {
           argv.push_back("EX");
           argv.push_back(std::to_string(ttl));
         }
-        
+
         it->Next();
         pink::SerializeRedisCommand(argv, &cmd);
         PlusNum();

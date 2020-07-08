@@ -13,6 +13,7 @@ PikaSender::PikaSender(nemo::Nemo *db, std::string ip, int64_t port, std::string
   should_exit_(false),
   elements_(0)
   {
+    set_thread_name("Pika_sender thread.");
   }
 
 PikaSender::~PikaSender() {
@@ -92,12 +93,12 @@ void PikaSender::ConnectRedis() {
 
 void PikaSender::LoadKey(const std::string &key) {
   keys_mutex_.Lock();
-  if (keys_queue_.size() < 100000) {
+  if (keys_queue_.size() < 10000000) {
     keys_queue_.push(key);
     rsignal_.Signal();
     keys_mutex_.Unlock();
   } else {
-    while (keys_queue_.size() > 100000) {
+    while (keys_queue_.size() > 10000000) {
       wsignal_.Wait();
     }
     keys_queue_.push(key);
@@ -106,7 +107,7 @@ void PikaSender::LoadKey(const std::string &key) {
   }
 }
 
-void PikaSender::SendCommand(std::string &command, const std::string &key) {
+void PikaSender::SendCommand(const std::string &command, const std::string &key) {
   // Send command
   slash::Status s = cli_->Send(&command);
   if (!s.ok()) {
@@ -253,9 +254,9 @@ void *PikaSender::ThreadMain() {
         }
         delete iter;
       } else if (type == nemo::DataType::kKv) {   // Kv
-        std::string k_key = key.substr(1);
-        command = k_key;
-        SendCommand(command, key);
+        // std::string k_key = key.substr(1);
+        // command = k_key;
+        SendCommand(key.substr(1), key);
         cnt++;
       }
 

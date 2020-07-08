@@ -18,6 +18,7 @@ RedisSender::RedisSender(int id, std::string ip, int64_t port, std::string passw
   elements_(0) {
 
   last_write_time_ = ::time(NULL);
+  set_thread_name("Pika-port: RedisSender_thread");
 }
 
 RedisSender::~RedisSender() {

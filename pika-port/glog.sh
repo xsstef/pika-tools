@@ -11,19 +11,19 @@
 
 mkdir -p deps
 cd deps
-
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
 ##############
 ### install cmake3 && automake for compiling glog
 ##############
 
-if [ ! -d "./cmake-3.13.3" ]; then
-  wget https://github.com/Kitware/CMake/releases/download/v3.13.3/cmake-3.13.3.tar.gz
-  tar -zxvf cmake-3.13.3.tar.gz
-fi
-cd cmake-3.13.3 && ./bootstrap  && gmake && sudo gmake install && cd ..
-rm -f /usr/bin/cmake
-ln -s /usr/local/bin/cmake /usr/bin/cmake
-
+#if [ ! -d "./cmake-3.13.3" ]; then
+#  wget https://github.com/Kitware/CMake/releases/download/v3.13.3/cmake-3.13.3.tar.gz
+#  tar -zxvf cmake-3.13.3.tar.gz
+#fi
+#cd cmake-3.13.3 && ./bootstrap  && gmake && sudo gmake install && cd ..
+#rm -f /usr/bin/cmake
+#ln -s /usr/local/bin/cmake /usr/bin/cmake
+#
 yum install -y automake
 autoreconf -ivf
 
@@ -36,9 +36,8 @@ if [ ! -d "./libunwind-1.3.1" ]; then
   tar -xf libunwind-1.3.1.tar.gz
 fi
 
-mkdir libunwind
 cd libunwind-1.3.1
-./configure --prefix=`pwd`/../libunwind
+./configure --prefix=/usr/local
 make
 make install
 cd ..
@@ -46,32 +45,23 @@ cd ..
 ##############
 ### compile gflags
 ##############
-
 # 卸载系统的gflags
 # sudo yum remove -y gflags-devel
 # 下载编译gflags
-if [ ! -d "./gflags-2.2.1" ]; then
-  wget -O gflags-2.2.1.tar.gz https://github.com/gflags/gflags/archive/v2.2.1.tar.gz
-  tar zxvf gflags-2.2.1.tar.gz
+if [ ! -d "./gflags" ]; then
+  git clone https://github.com/gflags/gflags.git
 fi
-cd gflags-2.2.1
-rm -rf build && mkdir -p build && cd build
-cmake .. -DCMAKE_INSTALL_PREFIX=../../gflags
-make
-make install
-cd ../..
+cd gflags
+git checkout v2.0
+./configure --prefix=/usr/local
+make && make install
 
 ##############
 ### compile glog
 ##############
 
-mkdir -p glog
-
-# return to root dir
-cd ..
-
 cd third/glog
-./configure --includedir=../../deps/gflags/include
+./configure --prefix=/usr/local
 rm -rf build && mkdir -p build && cd build
 export CXXFLAGS="-fPIC" && cmake .. -DCMAKE_INSTALL_PREFIX=../../../deps/glog && make VERBOSE=1 && make install
 cd ../../..

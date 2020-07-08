@@ -25,7 +25,7 @@ public:
       return elements_;
   	}
 
-	void SendCommand(std::string &command, const std::string &key);
+	void SendCommand(const std::string &command, const std::string &key);
   	int QueueSize() {
   	  slash::MutexLock l(&keys_mutex_);
   	  int len = keys_queue_.size();
