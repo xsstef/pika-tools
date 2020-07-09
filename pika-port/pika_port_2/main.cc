@@ -12,6 +12,7 @@
 
 #include "pika_port.h"
 #include "port_conf.h"
+#define INT64_MAX ((int64_t) 9223372036854775807)
 
 PortConf g_port_conf;
 
@@ -19,7 +20,7 @@ PikaPort* g_pika_port;
 
 static void GlogInit(std::string& log_path, bool is_daemon) {
   if (!slash::FileExists(log_path)) {
-    slash::CreatePath(log_path); 
+    slash::CreatePath(log_path);
   }
 
   if (!is_daemon) {
@@ -83,8 +84,9 @@ static void Usage()
             "\t-r     -- rsync dump data path(OPTIONAL default: ./rsync_dump) \n"
             "\t-l     -- local log path(OPTIONAL default: ./log) \n"
             "\t-d     -- daemonize(OPTIONAL) \n"
+            "\t-b     -- data buffer size \n"
             "  example: ./pika_port -t 127.0.0.1 -p 12345 -i 127.0.0.1 -o 9221 "
-			"-m 127.0.0.1 -n 6379 -x 7 -f 0 -s 0 -w abc -l ./log -r ./rsync_dump -d\n"
+            "-m 127.0.0.1 -n 6379 -x 7 -f 0 -s 0 -w abc -l ./log -r ./rsync_dump -d -b 100000000\n"
            );
 }
 
@@ -98,7 +100,7 @@ int main(int argc, char *argv[]) {
   char buf[1024];
   bool is_daemon = false;
   long num = 0;
-  while (-1 != (c = getopt(argc, argv, "t:p:i:o:f:s:w:r:l:m:n:x:y:dh"))) {
+  while (-1 != (c = getopt(argc, argv, "t:p:i:o:f:s:w:r:l:m:n:x:y:d:bh"))) {
     switch (c) {
       case 't':
         snprintf(buf, 1024, "%s", optarg);
@@ -169,6 +171,11 @@ int main(int argc, char *argv[]) {
       case 'd':
         is_daemon = true;
         break;
+      case 'b':
+        snprintf(buf, 1024, "%s", optarg);
+        slash::string2l(buf, strlen(buf), &(num));
+        g_port_conf.buffer_size = int64_t(num);
+        break;
       case 'h':
         Usage();
         return 0;
@@ -198,9 +205,16 @@ int main(int argc, char *argv[]) {
             << "dump_path:"  << g_port_conf.dump_path << " "
             << "filenum:"    << g_port_conf.filenum << " "
             << "offset:"     << g_port_conf.offset << " "
-            << "passwd:"     << g_port_conf.passwd << std::endl;
+            << "passwd:"     << g_port_conf.passwd << " "
+            << "buffer_size:" << std::endl;
   if (g_port_conf.master_port == 0 || g_port_conf.forward_port == 0) {
     fprintf (stderr, "Invalid Arguments\n" );
+    Usage();
+    exit(-1);
+  }
+
+  if (g_port_conf.buffer_size <= 0 || g_port_conf.buffer_size >= INT64_MAX) {
+    fprintf (stderr, "Invalid Arguments\n");
     Usage();
     exit(-1);
   }

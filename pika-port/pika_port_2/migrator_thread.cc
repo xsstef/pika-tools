@@ -1,14 +1,11 @@
 #include "migrator_thread.h"
 
-MigratorThread::~MigratorThread() {
-}
-
 void MigratorThread::MigrateDB(const char type) {
     if (type == nemo::DataType::kKv) {
       nemo::KIterator *it = db_->KScan("", "", -1, false);
       std::string key, value;
 
-      while (it->Valid()) {
+      while (it->Valid() && !should_exit_) {
         key = it->key();
         value = it->value();
         pink::RedisCmdArgsType argv;
@@ -52,7 +49,7 @@ void MigratorThread::MigrateDB(const char type) {
         std::string key_start = "a";
         key_start[0] = type;
         it->Seek(key_start);
-        for (; it->Valid(); it->Next()) {
+        for (; it->Valid() && !should_exit_; it->Next()) {
           PlusNum();
           DispatchKey(it->key().ToString());
         }
@@ -60,13 +57,14 @@ void MigratorThread::MigrateDB(const char type) {
 }
 
 void MigratorThread::DispatchKey(const std::string &key) {
-  (*senders_)[thread_index_]->LoadKey(key);
+  (*senders_)[thread_index_]->LoadKey(key, g_port_conf.buffer_size);
   thread_index_ = (thread_index_ + 1) % thread_num_;
 }
 
 void *MigratorThread::ThreadMain() {
   MigrateDB(type_);
   should_exit_ = true;
+  is_finish_ = true;
   log_info("%c keys have been dispatched completly", static_cast<char>(type_));
   return NULL;
 }

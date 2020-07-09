@@ -9,12 +9,13 @@
 #include "pink/include/pink_cli.h"
 #include "pink/include/redis_cli.h"
 #include "nemo.h"
+#include "port_conf.h"
 
 class PikaSender : public pink::Thread {
 public:
 	PikaSender(nemo::Nemo *db, std::string ip, int64_t port, std::string password);
 	virtual ~PikaSender();
-	void LoadKey(const std::string &cmd);
+	void LoadKey(const std::string &cmd, uint64_t buffer_size);
 	void Stop() {
   	  should_exit_ = true;
 	  keys_mutex_.Lock();

@@ -91,14 +91,14 @@ void PikaSender::ConnectRedis() {
   }
 }
 
-void PikaSender::LoadKey(const std::string &key) {
+void PikaSender::LoadKey(const std::string &key, uint64_t buffer_size_) {
   keys_mutex_.Lock();
-  if (keys_queue_.size() < 10000000) {
+  if (keys_queue_.size() < buffer_size_) {
     keys_queue_.push(key);
     rsignal_.Signal();
     keys_mutex_.Unlock();
   } else {
-    while (keys_queue_.size() > 10000000) {
+    while (keys_queue_.size() > buffer_size_) {
       wsignal_.Wait();
     }
     keys_queue_.push(key);
@@ -112,7 +112,7 @@ void PikaSender::SendCommand(const std::string &command, const std::string &key)
   slash::Status s = cli_->Send(&command);
   if (!s.ok()) {
     elements_--;
-    LoadKey(key);
+    LoadKey(key, g_port_conf.buffer_size);
     cli_->Close();
     log_info("%s", s.ToString().data());
     cli_ = NULL;

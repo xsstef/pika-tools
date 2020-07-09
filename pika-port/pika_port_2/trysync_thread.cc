@@ -24,6 +24,8 @@
 extern PikaPort* g_pika_port;
 
 TrysyncThread::~TrysyncThread() {
+  slash::StopRsync(g_port_conf.dump_path);
+  for (auto const &migrator : migrators_) { migrator->Stop(); }
   StopThread();
   delete cli_;
   DLOG(INFO) << " Trysync thread " << pthread_self() << " exit!!!";
@@ -212,7 +214,8 @@ bool TrysyncThread::TryUpdateMasterOffset() {
 
 #include "nemo.h"
 #include "pika_sender.h"
-#include "migrator_thread.h"
+//#include "progress.h"
+// #include "migrator_thread.h"
 
 using std::chrono::high_resolution_clock;
 using std::chrono::milliseconds;
@@ -225,7 +228,6 @@ int TrysyncThread::Retransmit() {
   std::string password = g_port_conf.forward_passwd;
 
   std::vector<PikaSender*> senders;
-  std::vector<std::unique_ptr<MigratorThread>> migrators;
   std::unique_ptr<nemo::Nemo> db;
 
   high_resolution_clock::time_point start = high_resolution_clock::now();
@@ -244,27 +246,32 @@ int TrysyncThread::Retransmit() {
     senders.emplace_back(new PikaSender(db.get(), ip, port, password));
   }
 
-  migrators.emplace_back(new MigratorThread(db.get(), &senders, nemo::DataType::kKv, thread_num));
-  migrators.emplace_back(new MigratorThread(db.get(), &senders, nemo::DataType::kHSize, thread_num));
-  migrators.emplace_back(new MigratorThread(db.get(), &senders, nemo::DataType::kSSize, thread_num));
-  migrators.emplace_back(new MigratorThread(db.get(), &senders, nemo::DataType::kLMeta, thread_num));
-  migrators.emplace_back(new MigratorThread(db.get(), &senders, nemo::DataType::kZSize, thread_num));
+  if (!migrators_.empty()) { migrators_.clear(); }
+
+  migrators_.emplace_back(new MigratorThread(db.get(), &senders, nemo::DataType::kKv, thread_num));
+  migrators_.emplace_back(new MigratorThread(db.get(), &senders, nemo::DataType::kHSize, thread_num));
+  migrators_.emplace_back(new MigratorThread(db.get(), &senders, nemo::DataType::kSSize, thread_num));
+  migrators_.emplace_back(new MigratorThread(db.get(), &senders, nemo::DataType::kLMeta, thread_num));
+  migrators_.emplace_back(new MigratorThread(db.get(), &senders, nemo::DataType::kZSize, thread_num));
 
   // start threads
-  LOG(INFO) << "Sart to migrate data...";
+  LOG(INFO) << "Sart to migrator_thread.hmigrate data...";
   for (size_t i = 0; i < kDataSetNum; i++) {
-    migrators[i]->StartThread();
+    migrators_[i]->StartThread();
   }
+
   for (size_t i = 0; i < thread_num; i++) {
     senders[i]->StartThread();
   }
 
-  for(size_t i = 0; i < kDataSetNum; i++) {
-    migrators[i]->JoinThread();
+  for (size_t i = 0; i < kDataSetNum; i++) {
+    migrators_[i]->JoinThread();
   }
-  for(size_t i = 0; i < thread_num; i++) {
+
+  for (size_t i = 0; i < thread_num; i++) {
     senders[i]->Stop();
   }
+
   for (size_t i = 0; i < thread_num; i++) {
     senders[i]->JoinThread();
   }

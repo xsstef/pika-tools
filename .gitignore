@@ -5,7 +5,8 @@ tags
 *.o
 *.rdb
 *.out
-
+*.swp
+core*
 #Pika to Txt Binary file
 pika_to_txt/pika_to_txt
 
@@ -41,3 +42,5 @@ txt_to_pika/txt_to_pika
 ##libs
 pika-port/deps/
 third/
+pika-port/pika_port_2/rsync_dump*
+pika-port/pika_port_2/log*

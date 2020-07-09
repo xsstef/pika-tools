@@ -1,0 +1,30 @@
+#include "progress.h"
+
+ProgressThread::ProgressThread(std::vector<MigratorThread*>* migrator_threads)
+    : migrator_threads_(migrator_threads) {
+}
+
+bool ProgressThread::AllMigratorThreadFinish() {
+  for (const auto& migrator_thread : *migrator_threads_)
+    if (!migrator_thread->is_finish()) return false;
+  return true;
+}
+
+void* ProgressThread::ThreadMain() {
+  while(true) {
+    slash::MutexLock l(&mutex);
+    bool is_finish = AllMigratorThreadFinish();
+    printf("\rstring keys: %5ld, hashes keys: %5ld, lists keys: %5ld, sets keys: %5ld, zsets keys: %5ld ",
+           (*migrator_threads_)[0]->num(),
+           (*migrator_threads_)[1]->num(),
+           (*migrator_threads_)[2]->num(),
+           (*migrator_threads_)[3]->num(),
+           (*migrator_threads_)[4]->num());
+    fflush(stdout);
+    if (is_finish) break;
+    sleep(1);
+  }
+  return NULL;
+}
+
+

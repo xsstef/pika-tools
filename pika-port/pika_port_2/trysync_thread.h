@@ -9,6 +9,7 @@
 #include "pink/include/pink_thread.h"
 #include "pink/include/redis_cli.h"
 
+#include "migrator_thread.h"
 
 class TrysyncThread : public pink::Thread {
 public:
@@ -23,6 +24,7 @@ private:
   int sockfd_;
   int64_t sid_;
   pink::PinkCli *cli_;
+  std::vector<std::unique_ptr<MigratorThread>> migrators_;
 
   bool Send();
   bool RecvProc();
