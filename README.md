@@ -1,2 +1,4 @@
 # pika-tools
-This project is used to store some Qihoo360 pika tools
+## Install
+cd pika-port
+sh build2.sh
